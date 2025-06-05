@@ -1,16 +1,20 @@
-DII:
-  apply: true
-  display: 0
 NDC:
-  Name_Obj: Test_Van_1
+  apply: false
   Time_zone: '+3'
+  type_id: 101
+  id: Demo
+  zone_pref: '1'
+  Name_Obj: Test_Van_1
   adr_1: http://192.168.2.100:8000
   adr_2: http://192.168.2.101:8000
-  apply: false
-  id: Demo
-  type_id: 101
-  zone_pref: '1'
 PTI:
   apply: true
   interval: 15
   tim_beg: 00:00:00
+DII:
+  apply: true
+  display: 0
+DETECTOR:
+  model_path: models/yolov8n.onnx
+  video_source: video/test_vid.mp4
+  vehicle_class_id: 2

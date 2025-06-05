@@ -7,11 +7,22 @@ from logger import Logger
 logger_obj = Logger()
 
 class YOLOv8Detector:
-    def __init__(self, model_path='models/yolov8n.onnx', providers=['CUDAExecutionProvider', 'CPUExecutionProvider']):
+    def __init__(self, model_path='models/yolov8n.onnx', providers=None):
         self.model_path = model_path
-        self.session = ort.InferenceSession(model_path, providers=providers)
-        self.input_name = self.session.get_inputs()[0].name
-        logger_obj.log(f"Loaded ONNX model from {model_path}", "INFO")
+        if providers is None:
+            providers = [
+                'TensorrtExecutionProvider',
+                'CUDAExecutionProvider',
+                'CPUExecutionProvider'
+            ]
+        try:
+            self.session = ort.InferenceSession(model_path, providers=providers)
+            self.input_name = self.session.get_inputs()[0].name
+            logger_obj.log(f"Loaded ONNX model from {model_path}", "INFO")
+            logger_obj.log(f"Execution providers: {self.session.get_providers()}", "DEBUG")
+        except Exception as e:
+            logger_obj.log(f"Failed to load model {model_path}: {e}", "ERROR")
+            raise
 
     def preprocess(self, frame):
         img = cv2.resize(frame, (640, 640))
@@ -22,7 +33,6 @@ class YOLOv8Detector:
 
     def postprocess(self, outputs, conf_threshold=0.3):
         detections = outputs[0]
-        # Если выход имеет форму (1, N, 6), убираем батч-измерение.
         if len(detections.shape) == 3:
             detections = detections[0]
         boxes = []
@@ -40,5 +50,8 @@ class YOLOv8Detector:
         preprocessed = self.preprocess(frame)
         outputs = self.session.run(None, {self.input_name: preprocessed})
         boxes, scores, class_ids = self.postprocess(outputs)
-        logger_obj.log(f"Detected {len(boxes)} objects. Class IDs: {class_ids} Scores: {scores}", "DEBUG")
+        logger_obj.log(
+            f"Detected {len(boxes)} objects. Class IDs: {class_ids} Scores: {scores}",
+            "DEBUG",
+        )
         return boxes, scores, class_ids

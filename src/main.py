@@ -1,6 +1,6 @@
 # src/main.py
+import asyncio
 import cv2
-import threading
 import time
 from detector import YOLOv8Detector
 from aggregator import DataAggregator
@@ -11,30 +11,25 @@ from logger import Logger
 
 logger_obj = Logger()
 
-def detection_loop(detector, aggregator, config, server_url):
-    # Используем видеофайл (путь к видео, см. предыдущие изменения)
-    cap = cv2.VideoCapture("video/test_vid.mp4")
-    
+async def detection_loop(detector, aggregator, config: ConfigManager, server_url):
+    cap = cv2.VideoCapture(config.settings.DETECTOR.video_source)
     fps_count = 0
     start_time = time.time()
-    
-    # Если требуется обработка в реальном времени, можно убрать sleep или установить короткий интервал.
-    process_interval = config.config.get("PTI", {}).get("interval", 15)
-    
+    process_interval = config.settings.PTI.interval
+
     while True:
         frame_start = time.time()
         ret, frame = cap.read()
         if not ret:
             logger_obj.log("Frame capture failed", "ERROR")
-            time.sleep(1)
-            # Если видео закончено, начинаем сначала:
+            await asyncio.sleep(1)
             cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
             continue
 
-        boxes, scores, class_ids = detector.detect(frame)
+        boxes, scores, class_ids = await asyncio.to_thread(detector.detect, frame)
         agg_data = aggregator.aggregate_detections(boxes, scores, class_ids)
-        send_post(server_url, agg_data)
-        
+        await send_post(server_url, agg_data)
+
         fps_count += 1
         elapsed = time.time() - start_time
         if elapsed >= 1.0:
@@ -42,26 +37,26 @@ def detection_loop(detector, aggregator, config, server_url):
             fps_count = 0
             start_time = time.time()
 
-def main():
+        await asyncio.sleep(max(0, process_interval - (time.time() - frame_start)))
+
+async def main():
     config = ConfigManager()
-    detector = YOLOv8Detector(model_path='models/yolov8n.onnx')
-    aggregator = DataAggregator(config.config)
-    protocol = SkNeuroProtocol(config.config)
+    detector = YOLOv8Detector(model_path=config.settings.DETECTOR.model_path)
+    aggregator = DataAggregator(config.settings)
+    protocol = SkNeuroProtocol(config.settings)
 
-    # Запускаем цикл детекции в отдельном потоке
-    server_url = config.config.get("NDC", {}).get("adr_1", "http://192.168.2.100:8000")
-    detection_thread = threading.Thread(target=detection_loop, args=(detector, aggregator, config, server_url), daemon=True)
-    detection_thread.start()
+    server_url = config.settings.NDC.adr_1
+    communicator_task = asyncio.create_task(start_communicator(protocol))
+    detection_task = asyncio.create_task(detection_loop(detector, aggregator, config, server_url))
 
-    # Запускаем FastAPI сервер для приёма команд в отдельном потоке
-    communicator_thread = threading.Thread(target=start_communicator, args=(protocol,), daemon=True)
-    communicator_thread.start()
-
-    # Основной цикл – периодически выводим статус детектора
-    while True:
-        status_msg = protocol.get_status_message()
-        logger_obj.log(f"Status: {status_msg}", "INFO")
-        time.sleep(30)
+    try:
+        while True:
+            status_msg = protocol.get_status_message()
+            logger_obj.log(f"Status: {status_msg}", "INFO")
+            await asyncio.sleep(30)
+    finally:
+        communicator_task.cancel()
+        detection_task.cancel()
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
