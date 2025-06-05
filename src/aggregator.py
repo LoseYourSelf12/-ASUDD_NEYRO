@@ -1,14 +1,18 @@
-# src/aggregator.py
+# Модуль агрегатора данных
 from logger import Logger
+from config_models import Settings
 
 logger_obj = Logger()
 
 class DataAggregator:
-    def __init__(self, config):
-        self.config = config
+    """Агрегация результатов детекции."""
+
+    def __init__(self, settings: Settings):
+        self.settings = settings
 
     def aggregate_detections(self, boxes, scores, class_ids):
-        # Простой пример: считаем количество автомобилей (предположим, class_id == 2 означает автомобиль)
-        vehicle_count = sum(1 for cid in class_ids if cid == 2)
+        """Подсчёт объектов заданного класса."""
+        vehicle_class = self.settings.detector.vehicle_class_id
+        vehicle_count = sum(1 for cid in class_ids if cid == vehicle_class)
         logger_obj.log(f"Aggregated vehicle count: {vehicle_count}", "DEBUG")
         return {"vehicle_count": vehicle_count}
