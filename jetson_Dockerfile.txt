@@ -1,0 +1,16 @@
+# Dockerfile
+FROM nvcr.io/nvidia/l4t-base:r32.6.1
+
+# Установка Python и зависимостей
+RUN apt-get update && apt-get install -y python3 python3-pip && apt-get clean
+COPY requirements.txt /tmp/requirements.txt
+RUN pip3 install --upgrade pip && pip3 install -r /tmp/requirements.txt
+
+# Копирование исходного кода
+WORKDIR /app
+COPY . /app
+
+# Открываем порт для FastAPI
+EXPOSE 8000
+
+CMD ["python3", "src/main.py"]
