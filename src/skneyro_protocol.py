@@ -1,14 +1,17 @@
-# src/skneyro_protocol.py
+# Реализация протокола обмена сообщениями
 from logger import Logger
 from config_models import Settings
 
 logger_obj = Logger()
 
 class SkNeuroProtocol:
+    """Утилиты для формирования и разбора команд."""
+
     def __init__(self, config: Settings):
         self.config = config
 
     def calculate_crc8(self, message):
+        """Расчёт CRC8 для строки."""
         crc = 0
         poly = 0x07
         for byte in message.encode('utf-8'):
@@ -19,6 +22,7 @@ class SkNeuroProtocol:
         return format(crc, '02X')
 
     def format_command(self, cmd_type, typ, obj, params, front_hider='$', back_hider='$'):
+        """Формирование строки команды по протоколу."""
         cmd_str = f"{cmd_type}|{typ}|{obj}|" + "|".join(map(str, params))
         crc = self.calculate_crc8(cmd_str)
         full_cmd = f"{front_hider}{cmd_str}|{crc}{back_hider}"
@@ -26,6 +30,7 @@ class SkNeuroProtocol:
         return full_cmd
 
     def parse_message(self, message):
+        """Разбор входящих сообщений и проверка CRC."""
         if not message:
             return None
         if message[0] not in ['$', '€', '#'] or message[-1] not in ['$', '€', '#']:
@@ -42,6 +47,7 @@ class SkNeuroProtocol:
         return parts[:-1]
 
     def get_status_message(self):
+        """Создание сообщения о состоянии детектора."""
         typ = self.config.NDC.type_id
         obj = self.config.NDC.id
         message = f"#MST|{typ}|{obj}|0|Detector OK|TXT"
@@ -50,6 +56,7 @@ class SkNeuroProtocol:
         return full_msg
 
     def restart_command(self):
+        """Формирование команды перезапуска."""
         typ = self.config.NDC.type_id
         obj = self.config.NDC.id
         params = [0, 0, "On"]

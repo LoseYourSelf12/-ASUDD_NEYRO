@@ -1,4 +1,4 @@
-# src/logger.py
+# Простейший класс логирования
 import logging
 
 logger = logging.getLogger("vehicle_detector")
@@ -9,6 +9,8 @@ ch.setFormatter(formatter)
 logger.addHandler(ch)
 
 class Logger:
+    """Сбор и вывод сообщений в консоль."""
+
     def __init__(self):
         self.logs = []
 

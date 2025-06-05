@@ -1,6 +1,11 @@
+# Описание моделей конфигурации
+from __future__ import annotations
+
 from pydantic import BaseModel
 
 class NDC(BaseModel):
+    """Настройки подключения к серверу."""
+
     apply: bool = False
     Time_zone: str = "+3"
     type_id: int = 101
@@ -11,20 +16,28 @@ class NDC(BaseModel):
     adr_2: str = "http://192.168.2.101:8000"
 
 class PTI(BaseModel):
+    """Настройки периодической передачи данных."""
+
     apply: bool = True
     interval: int = 15
     tim_beg: str = "00:00:00"
 
 class DII(BaseModel):
+    """Параметры отображения отладочной информации."""
+
     apply: bool = True
     display: int = 0
 
 class DetectorConfig(BaseModel):
+    """Конфигурация детектора."""
+
     model_path: str = "models/yolov8n.onnx"
     video_source: str = "video/test_vid.mp4"
     vehicle_class_id: int = 2
 
 class Settings(BaseModel):
+    """Объединённые настройки всей системы."""
+
     NDC: NDC = NDC()
     PTI: PTI = PTI()
     DII: DII = DII()

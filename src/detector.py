@@ -1,4 +1,4 @@
-# src/detector.py
+# Модуль работы с моделью YOLO
 import cv2
 import onnxruntime as ort
 import numpy as np
@@ -7,7 +7,10 @@ from logger import Logger
 logger_obj = Logger()
 
 class YOLOv8Detector:
+    """Класс обёртки над ONNX-моделью YOLOv8."""
+
     def __init__(self, model_path='models/yolov8n.onnx', providers=None):
+        """Инициализация с выбором доступных провайдеров."""
         self.model_path = model_path
         if providers is None:
             providers = [
@@ -25,6 +28,7 @@ class YOLOv8Detector:
             raise
 
     def preprocess(self, frame):
+        """Подготовка кадра к подаче в модель."""
         img = cv2.resize(frame, (640, 640))
         img = img.transpose(2, 0, 1)  # CHW
         img = img.astype(np.float32) / 255.0
@@ -32,6 +36,7 @@ class YOLOv8Detector:
         return img
 
     def postprocess(self, outputs, conf_threshold=0.3):
+        """Постобработка выходов модели."""
         detections = outputs[0]
         if len(detections.shape) == 3:
             detections = detections[0]
@@ -47,6 +52,7 @@ class YOLOv8Detector:
         return boxes, scores, class_ids
 
     def detect(self, frame):
+        """Выполняет детекцию на одном кадре."""
         preprocessed = self.preprocess(frame)
         outputs = self.session.run(None, {self.input_name: preprocessed})
         boxes, scores, class_ids = self.postprocess(outputs)
