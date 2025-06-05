@@ -4,3 +4,5 @@ opencv-python
 onnxruntime
 PyYAML
 requests
+httpx
+pydantic
