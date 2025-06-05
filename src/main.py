@@ -13,10 +13,10 @@ logger_obj = Logger()
 
 async def detection_loop(detector, aggregator, config: ConfigManager, server_url):
     """Асинхронный цикл детекции и отправки результатов."""
-    cap = cv2.VideoCapture(config.settings.DETECTOR.video_source)
+    cap = cv2.VideoCapture(config.settings.detector.video_source)
     fps_count = 0
     start_time = time.time()
-    process_interval = config.settings.PTI.interval
+    process_interval = config.settings.pti.interval
 
     while True:
         frame_start = time.time()
@@ -43,11 +43,11 @@ async def detection_loop(detector, aggregator, config: ConfigManager, server_url
 async def main():
     """Точка входа приложения."""
     config = ConfigManager()
-    detector = YOLOv8Detector(model_path=config.settings.DETECTOR.model_path)
+    detector = YOLOv8Detector(model_path=config.settings.detector.model_path)
     aggregator = DataAggregator(config.settings)
     protocol = SkNeuroProtocol(config.settings)
 
-    server_url = config.settings.NDC.adr_1
+    server_url = config.settings.ndc.adr_1
     communicator_task = asyncio.create_task(start_communicator(protocol))
     detection_task = asyncio.create_task(detection_loop(detector, aggregator, config, server_url))
 

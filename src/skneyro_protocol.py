@@ -48,8 +48,8 @@ class SkNeuroProtocol:
 
     def get_status_message(self):
         """Создание сообщения о состоянии детектора."""
-        typ = self.config.NDC.type_id
-        obj = self.config.NDC.id
+        typ = self.config.ndc.type_id
+        obj = self.config.ndc.id
         message = f"#MST|{typ}|{obj}|0|Detector OK|TXT"
         crc = self.calculate_crc8(message[1:])
         full_msg = f"#MST|{typ}|{obj}|0|Detector OK|TXT|{crc}#"
@@ -57,7 +57,7 @@ class SkNeuroProtocol:
 
     def restart_command(self):
         """Формирование команды перезапуска."""
-        typ = self.config.NDC.type_id
-        obj = self.config.NDC.id
+        typ = self.config.ndc.type_id
+        obj = self.config.ndc.id
         params = [0, 0, "On"]
         return self.format_command("€RES", typ, obj, params, front_hider="€", back_hider="€")

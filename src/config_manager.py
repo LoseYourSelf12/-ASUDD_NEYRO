@@ -14,7 +14,7 @@ class ConfigManager:
         """Чтение конфигурации или создание файла по умолчанию."""
         if not os.path.exists(self.config_file):
             settings = Settings()
-            self.save_config(settings.dict())
+            self.save_config(settings.model_dump(by_alias=True))
             return settings
         with open(self.config_file, 'r') as f:
             data = yaml.safe_load(f)
@@ -29,7 +29,7 @@ class ConfigManager:
     def update_config(self, key, value):
         """Обновление отдельного параметра конфигурации."""
         keys = key.split('.')
-        cfg = self.settings.dict()
+        cfg = self.settings.model_dump(by_alias=True)
         ref = cfg
         for k in keys[:-1]:
             ref = ref.setdefault(k, {})

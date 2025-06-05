@@ -1,7 +1,7 @@
 # Описание моделей конфигурации
 from __future__ import annotations
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, ConfigDict
 
 class NDC(BaseModel):
     """Настройки подключения к серверу."""
@@ -38,7 +38,9 @@ class DetectorConfig(BaseModel):
 class Settings(BaseModel):
     """Объединённые настройки всей системы."""
 
-    NDC: NDC = NDC()
-    PTI: PTI = PTI()
-    DII: DII = DII()
-    DETECTOR: DetectorConfig = DetectorConfig()
+    model_config = ConfigDict(populate_by_name=True)
+
+    ndc: NDC = Field(default_factory=NDC, alias="NDC")
+    pti: PTI = Field(default_factory=PTI, alias="PTI")
+    dii: DII = Field(default_factory=DII, alias="DII")
+    detector: DetectorConfig = Field(default_factory=DetectorConfig, alias="DETECTOR")
