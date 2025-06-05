@@ -1,14 +1,17 @@
-# src/config_manager.py
+# Работа с конфигурационным файлом
 import yaml
 import os
 from config_models import Settings
 
 class ConfigManager:
+    """Загрузка и сохранение настроек из YAML."""
+
     def __init__(self, config_file='configs/skneyro_config.yaml'):
         self.config_file = config_file
         self.settings = self.load_config()
 
     def load_config(self) -> Settings:
+        """Чтение конфигурации или создание файла по умолчанию."""
         if not os.path.exists(self.config_file):
             settings = Settings()
             self.save_config(settings.dict())
@@ -19,10 +22,12 @@ class ConfigManager:
         return settings
 
     def save_config(self, config_dict):
+        """Сохранение конфигурации на диск."""
         with open(self.config_file, 'w') as f:
             yaml.dump(config_dict, f)
 
     def update_config(self, key, value):
+        """Обновление отдельного параметра конфигурации."""
         keys = key.split('.')
         cfg = self.settings.dict()
         ref = cfg

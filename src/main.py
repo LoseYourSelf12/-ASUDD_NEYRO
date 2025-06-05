@@ -1,4 +1,4 @@
-# src/main.py
+# Главный модуль запуска детектора
 import asyncio
 import cv2
 import time
@@ -12,6 +12,7 @@ from logger import Logger
 logger_obj = Logger()
 
 async def detection_loop(detector, aggregator, config: ConfigManager, server_url):
+    """Асинхронный цикл детекции и отправки результатов."""
     cap = cv2.VideoCapture(config.settings.DETECTOR.video_source)
     fps_count = 0
     start_time = time.time()
@@ -40,6 +41,7 @@ async def detection_loop(detector, aggregator, config: ConfigManager, server_url
         await asyncio.sleep(max(0, process_interval - (time.time() - frame_start)))
 
 async def main():
+    """Точка входа приложения."""
     config = ConfigManager()
     detector = YOLOv8Detector(model_path=config.settings.DETECTOR.model_path)
     aggregator = DataAggregator(config.settings)
